@@ -25,7 +25,7 @@ trait BaseOracleQueryGeneratorTest
     DruidQueryGenerator.register(queryGeneratorRegistry, queryOptimizer = new SyncDruidQueryOptimizer(timeout = 5000))
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
     registryBuilder.register(pubfact(forcedFilters))
     registryBuilder.register(pubfactV1(forcedFilters))
     registryBuilder.register(pubfact2(forcedFilters))
@@ -121,7 +121,7 @@ trait BaseOracleQueryGeneratorTest
           PublicFactCol("Average CPC", "Average CPC", InBetweenEquality),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", true, true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", true, true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -223,7 +223,7 @@ trait BaseOracleQueryGeneratorTest
     )
   }
 
-  def pubfact2(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfact2(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     import OracleExpression._
     ColumnContext.withColumnContext { implicit dc: ColumnContext =>
       Fact.newFact(
@@ -295,7 +295,7 @@ trait BaseOracleQueryGeneratorTest
           PublicFactCol("N Average CPC", "N Average CPC", InBetweenEquality),
           PublicFactCol("impression_share_rounded", "Impression Share", InBetweenEquality)
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -367,7 +367,7 @@ trait BaseOracleQueryGeneratorTest
           PublicFactCol("Average CPC", "Average CPC", InBetweenEquality),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -527,7 +527,7 @@ trait BaseOracleQueryGeneratorTest
           PublicFactCol("Average CPC", "Average CPC", InBetweenEquality),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -759,7 +759,7 @@ trait BaseOracleQueryGeneratorTest
           PublicFactCol("Average CPC", "Average CPC", InBetweenEquality),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", true, true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", true, true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -793,7 +793,7 @@ trait BaseOracleQueryGeneratorTest
         PublicFactCol("impressions", "Impressions", InBetweenEqualityNullNotNull),
         PublicFactCol("clicks", "Clicks", InEqualityNotEquals),
         PublicFactCol("spend", "Spend", Set.empty)
-      ), Set(NotEqualToFilter("Clicks", "777", true, true), IsNotNullFilter("Impressions", true, true)),  getMaxDaysWindow, getMaxDaysLookBack
+      ), Set(ForceFilter(NotEqualToFilter("Clicks", "777", true, true)), ForceFilter(IsNotNullFilter("Impressions", true, true))),  getMaxDaysWindow, getMaxDaysLookBack
     )
   }
 

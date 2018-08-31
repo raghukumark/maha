@@ -543,10 +543,10 @@ object RequestModel extends Logging {
           }
 
           // populate all forced filters from fact
-          publicFact.forcedFilters.foreach { filter =>
-            if(!allFilterAliases(filter.field)) {
-              allFilterAliases += filter.field
-              filterMap.put(filter.field, filter)
+          publicFact.forceFilters.foreach { forcedFilter =>
+            if(!allFilterAliases(forcedFilter.filter.field)) {
+              allFilterAliases += forcedFilter.filter.field
+              filterMap.put(forcedFilter.filter.field, forcedFilter.filter)
             }
           }
 
@@ -645,6 +645,9 @@ object RequestModel extends Logging {
                   publicDim.name
               }
 
+//              fact.forceFilters.foreach( forceFilter => {
+//                forceFilter.filterCondition
+//              })
               val missingFields = schemaRequiredFilterAliases.filterNot(allFilterAliases.apply)
               require(missingFields.isEmpty,
                 s"required filter for cube=${publicFact.name}, schema=${request.schema}, fact=${fact.name} not found = $missingFields , found = $allFilterAliases")
@@ -778,10 +781,10 @@ object RequestModel extends Logging {
                   }
 
                   // populate all forced filters from dim
-                  val hasForcedFilters = publicDim.forcedFilters.foldLeft(false) {
-                    (b, filter) =>
-                      val result = if(!allNonFactFilterAliases(filter.field) && !filterPostProcess(filter.field)) {
-                        filters += filter
+                  val hasForcedFilters = publicDim.forceFilters.foldLeft(false) {
+                    (b, forcedFilter) =>
+                      val result = if(!allNonFactFilterAliases(forcedFilter.filter.field) && !filterPostProcess(forcedFilter.filter.field)) {
+                        filters += forcedFilter.filter
                         true
                       } else false
                       b || result

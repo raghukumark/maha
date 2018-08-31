@@ -1231,7 +1231,7 @@ class DruidQueryGenerator(queryOptimizer: DruidQueryOptimizer
     val fact = queryContext.factBestCandidate.fact
     val publicFact = queryContext.factBestCandidate.publicFact
     val filters = queryContext.factBestCandidate.filters
-    val factForcedFilters = queryContext.factBestCandidate.publicFact.forcedFilters
+    val factForcedFilters = queryContext.factBestCandidate.publicFact.forceFilters
     val allFilters = factForcedFilters // ++ filters need to append regular filters or pass in
     val whereFilters = new ArrayBuffer[DimFilter](filters.size)
     val havingFilters = new ArrayBuffer[HavingSpec](filters.size)

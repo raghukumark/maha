@@ -47,8 +47,8 @@ class DruidQueryExecutorTest extends FunSuite with Matchers with BeforeAndAfterA
     server.shutdown
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
-    registryBuilder.register(pubfact(forcedFilters))
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
+    registryBuilder.register(pubfact(forcedFilters, forceFilters))
     registryBuilder.register(pubfact2())
     registryBuilder.register(pubfact3())
   }
@@ -190,7 +190,7 @@ class DruidQueryExecutorTest extends FunSuite with Matchers with BeforeAndAfterA
       )
   }
 
-  private[this] def pubfact(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  private[this] def pubfact(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     import DruidExpression._
     val factBuilder = ColumnContext.withColumnContext { implicit dc: ColumnContext =>
       Fact.newFact(
@@ -369,7 +369,7 @@ class DruidQueryExecutorTest extends FunSuite with Matchers with BeforeAndAfterA
           PublicFactCol("clicks", "Clicks", InBetweenEquality),
           PublicFactCol("spend", "Spend", Set.empty),
           PublicFactCol("Der Fact Col A", "Der Fact Col A", InBetweenEquality)
-        ), Set(EqualityFilter("Test Flag", "0", isForceFilter = true)),  getMaxDaysWindow, getMaxDaysLookBack
+        ), Set(ForceFilter(EqualityFilter("Test Flag", "0", isForceFilter = true))),  getMaxDaysWindow, getMaxDaysLookBack
       )
   }
 

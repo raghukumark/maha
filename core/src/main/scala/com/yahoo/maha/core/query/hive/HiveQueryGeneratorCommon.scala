@@ -171,7 +171,7 @@ abstract class HiveQueryGeneratorCommon(partitionColumnRenderer:PartitionColumnR
     val hasPartitioningScheme = fact.annotations.contains(HiveQueryGenerator.ANY_PARTITIONING_SCHEME)
 
     val factFilters = queryContext.factBestCandidate.filters
-    val factForcedFilters = queryContext.factBestCandidate.publicFact.forcedFilters
+    val factForcedFilters = queryContext.factBestCandidate.publicFact.forceFilters
     val aliasToNameMapFull = queryContext.factBestCandidate.publicFact.aliasToNameColumnMap
     val allFilters = factForcedFilters // ++ factFilters need to append non-forced filters, or otherwise pass them in separately
 

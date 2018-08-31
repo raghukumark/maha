@@ -154,7 +154,7 @@ class BaseDDLGeneratorTest extends FunSuite with Matchers with BeforeAndAfterAll
         PublicFactCol("average_cpm", "Average CPM", Set.empty),
         PublicFactCol("ctr", "CTR", Set.empty)
       ),
-      Set(EqualityFilter("Source", "2", isForceFilter = true)),
+      Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))),
       getMaxDaysWindow, getMaxDaysLookBack
     )
 

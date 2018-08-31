@@ -3,6 +3,7 @@
 package com.yahoo.maha.core
 
 import com.yahoo.maha.core.ddl.DDLAnnotation
+import com.yahoo.maha.core.fact.ForceFilter
 
 /**
  * Created by hiral on 11/6/15.
@@ -17,7 +18,7 @@ trait BaseTable {
 
 trait PublicTable {
   def name: String
-  def forcedFilters: Set[ForcedFilter]
+  def forceFilters: Set[ForceFilter]
   def forcedFiltersByAliasMap: Map[String, ForcedFilter]
   def allColumnsByAlias: Set[String]
   def columnsByAliasMap: Map[String, PublicColumn]
@@ -27,10 +28,9 @@ trait PublicTable {
   def restrictedSchemasMap: Map[String, Set[Schema]]
   def requiredFilterAliases : Set[String]
   def validateForcedFilters() : Unit = {
-    forcedFilters.foreach {
-      filter =>
-        require(allColumnsByAlias(filter.field), s"Forced filter on non-existing column : $filter")
-        require(filter.isForceFilter, s"Forced Filter boolean ${filter.isForceFilter}, expected true")
+    forceFilters.foreach { forcedFilter =>
+        require(allColumnsByAlias(forcedFilter.filter.field), s"Forced filter on non-existing column : $forcedFilter")
+        require(forcedFilter.filter.isForceFilter, s"Forced Filter boolean ${forcedFilter.filter.isForceFilter}, expected true")
     }
   }
 }

@@ -24,14 +24,14 @@ trait BasePrestoQueryGeneratorTest
     PrestoQueryGenerator.register(queryGeneratorRegistry, DefaultPartitionColumnRenderer, TestPrestoUDFRegistrationFactory())
   }
 
-  override protected[this] def getDefaultRegistry(forcedFilters: Set[ForcedFilter] = Set.empty): Registry = {
+  override protected[this] def getDefaultRegistry(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): Registry = {
     val registryBuilder = new RegistryBuilder
     registerFacts(forcedFilters, registryBuilder)
     registerDims(registryBuilder)
     registryBuilder.build()
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
     registryBuilder.register(s_stats_fact(forcedFilters))
     registryBuilder.register(aga_stats_fact(forcedFilters))
     registryBuilder.register(ce_stats(forcedFilters))
@@ -263,7 +263,7 @@ trait BasePrestoQueryGeneratorTest
         , PublicFactCol("custom_rollup_spend", "Custom Rollup Spend", InBetweenEquality)
         , PublicFactCol("noop_rollup_spend", "Noop Rollup Spend", InBetweenEquality)
       ),
-      Set(EqualityFilter("Status","Valid", isForceFilter = true)),
+      Set(ForceFilter(EqualityFilter("Status","Valid", isForceFilter = true))),
       Map(
         (SyncRequest, DailyGrain) -> 400, (AsyncRequest, DailyGrain) -> 400
       ),

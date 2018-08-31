@@ -22,7 +22,7 @@ class BaseDruidQueryGeneratorTest extends FunSuite with Matchers with BeforeAndA
     DruidQueryGenerator.register(queryGeneratorRegistry, queryOptimizer = new SyncDruidQueryOptimizer(timeout = 5000))
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
     registryBuilder.register(pubfact(forcedFilters))
     registryBuilder.register(pubfact_v1(forcedFilters))
     registryBuilder.register(pubfact2(forcedFilters))
@@ -558,7 +558,7 @@ class BaseDruidQueryGeneratorTest extends FunSuite with Matchers with BeforeAndA
           PublicFactCol("clicks", "Clicks", InBetweenEquality),
           PublicFactCol("spend", "Spend", Set.empty),
           PublicFactCol("Const Der Fact Col A", "Const Der Fact Col A", InBetweenEquality)
-        ), Set(EqualityFilter("Test Flag", "0", isForceFilter = true)),  getMaxDaysWindow, getMaxDaysLookBack
+        ), Set(ForceFilter(EqualityFilter("Test Flag", "0", isForceFilter = true))),  getMaxDaysWindow, getMaxDaysLookBack
       )
   }
 

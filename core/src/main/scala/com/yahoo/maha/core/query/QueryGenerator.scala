@@ -4,7 +4,7 @@ package com.yahoo.maha.core.query
 
 import com.yahoo.maha.core._
 import com.yahoo.maha.core.dimension._
-import com.yahoo.maha.core.fact.FactBestCandidate
+import com.yahoo.maha.core.fact.{FactBestCandidate, ForceFilter}
 import com.yahoo.maha.core.query.Version.{v0, v1, v2}
 
 import scala.collection.mutable
@@ -181,7 +181,7 @@ trait QueryGenerator[T <: EngineRequirement] {
 
 trait BaseQueryGenerator[T <: EngineRequirement] extends QueryGenerator[T] {
 
-  def removeDuplicateIfForced(localFilters: Seq[Filter], forcedFilters: Seq[ForcedFilter], inputContext: FactualQueryContext): Array[Filter] = {
+  def removeDuplicateIfForced(localFilters: Seq[Filter], forceFilters: Seq[ForceFilter], inputContext: FactualQueryContext): Array[Filter] = {
     val queryContext = inputContext
 
     val fact = queryContext.factBestCandidate.fact
@@ -193,8 +193,9 @@ trait BaseQueryGenerator[T <: EngineRequirement] extends QueryGenerator[T] {
         val real_name = column.alias.getOrElse(name)
         returnedFilters(real_name) = filter
     }
-    forcedFilters.foreach {
-      filter =>
+    forceFilters.foreach {
+      forcedFilter =>
+        val filter = forcedFilter.filter
         val name = queryContext.factBestCandidate.publicFact.aliasToNameColumnMap(filter.field)
         val column = fact.columnsByNameMap(name)
         val real_name = column.alias.getOrElse(name)

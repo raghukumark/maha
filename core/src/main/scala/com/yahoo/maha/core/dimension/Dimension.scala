@@ -7,7 +7,9 @@ import com.google.common.annotations.VisibleForTesting
 import com.yahoo.maha.core.DruidDerivedFunction.GET_INTERVAL_DATE
 import com.yahoo.maha.core.ddl.{DDLAnnotation, HiveDDLAnnotation}
 import com.yahoo.maha.core._
+import com.yahoo.maha.core.fact.ForceFilter
 import com.yahoo.maha.core.request.RequestType
+
 import scala.collection.{SortedSet, mutable}
 import scala.collection.immutable.TreeSet
 
@@ -524,20 +526,20 @@ case class DimTable private[dimension](name: String
           }}}
       factAliasMap.toMap
     }
-    val forcedFiltersByBasenameMap: Map[String, Filter] = publicDimension.forcedFilters.map{
+    val forcedFiltersByBasenameMap: Map[String, Filter] = publicDimension.forceFilters.map{
       val backwardColByAlias: Map[String, String] =
         publicDimension.columns.map(col => col.alias -> col.name).toMap
-      forceFilter =>
-        val wrappedField = forceFilter.field
+      forcedFilter =>
+        val wrappedField = forcedFilter.filter.field
         if(backwardColByAlias.contains(wrappedField) && baseNameAliasMap.contains(backwardColByAlias(wrappedField))){
-          baseNameAliasMap(backwardColByAlias(wrappedField)) -> forceFilter
+          baseNameAliasMap(backwardColByAlias(wrappedField)) -> forcedFilter.filter
         }
         else{
-          throw new IllegalStateException(s"requirement failed: ${forceFilter.field} doesn't have a known alias")
+          throw new IllegalStateException(s"requirement failed: ${forcedFilter.filter.field} doesn't have a known alias")
         }
     }.toMap
 
-    require(forcedFiltersByBasenameMap.size == publicDimension.forcedFilters.size, "Forced Filters public fact and map of forced base cols differ in size")
+    require(forcedFiltersByBasenameMap.size == publicDimension.forceFilters.size, "Forced Filters public fact and map of forced base cols differ in size")
 
   }
 
@@ -714,7 +716,7 @@ case class DimensionBuilder private[dimension](private val baseDim: Dimension, p
     this
   }
 
-  def toPublicDimension(name: String, grainKey:String, columns: Set[PublicDimColumn], forcedFilters: Set[ForcedFilter] = Set.empty, revision: Int = 0, highCardinalityFilters: Set[Filter] = Set.empty) : PublicDimension = {
+  def toPublicDimension(name: String, grainKey:String, columns: Set[PublicDimColumn], forceFilters: Set[ForceFilter] = Set.empty, revision: Int = 0, highCardinalityFilters: Set[Filter] = Set.empty) : PublicDimension = {
     var ts: TreeSet[Filter] = TreeSet.empty(Filter.baseFilterOrdering)
     ts ++= highCardinalityFilters
     val schemaTableColMap : Map[Schema, Map[String, String]] = {
@@ -731,7 +733,7 @@ case class DimensionBuilder private[dimension](private val baseDim: Dimension, p
       }
       require(groupFlattened.size == 1, s"Schema $schema requires different columns across underlying tables : $groupFlattened")
     }
-    new PublicDim(name, grainKey, baseDim, columns, tableMap, forcedFilters, ts, revision)
+    new PublicDim(name, grainKey, baseDim, columns, tableMap, forceFilters, ts, revision)
   }
 
   @VisibleForTesting
@@ -821,7 +823,7 @@ case class PublicDim (name: String
                       , baseDim: Dimension
                       , columns: Set[PublicDimColumn]
                       , dims: Map[String, Dimension]
-                      , forcedFilters: Set[ForcedFilter]
+                      , forceFilters: Set[ForceFilter]
                       , private val highCardinalityFilters: Set[Filter]
                       , revision: Int = 0) extends PublicDimension {
 
@@ -830,7 +832,7 @@ case class PublicDim (name: String
   validate()
 
   val schemas: Set[Schema] = dims.values.map(_.schemas).flatten.toSet
-  val forcedFiltersByAliasMap: Map[String, ForcedFilter] = forcedFilters.map(f => f.field -> f).toMap
+  val forcedFiltersByAliasMap: Map[String, ForcedFilter] = forceFilters.map(f => f.filter.field -> f.filter).toMap
   val columnsByAliasMap: Map[String, PublicColumn] = columns.map(pdc => pdc.alias -> pdc).toMap
   val nameToDataTypeMap: Map[String, DataType] = dims.values.flatMap(_.columns).map(d=> (d.name,d.dataType)).toMap
 

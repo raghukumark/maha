@@ -123,7 +123,7 @@ class RequestModelTest extends FunSuite with Matchers {
     }
   }
 
-  def pubfact(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfact(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     getFactBuilder
       .toPublicFact("publicFact",
         Set(
@@ -147,12 +147,12 @@ class RequestModelTest extends FunSuite with Matchers {
           PublicFactCol("clicks", "Clicks", In),
           PublicFactCol("spend", "Spend", InBetweenEquality, restrictedSchemas = Set(ResellerSchema))
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
 
-  def pubfactRev2(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfactRev2(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     getFactBuilder
       .toPublicFact("publicFactRev2",
         Set(
@@ -171,12 +171,12 @@ class RequestModelTest extends FunSuite with Matchers {
           PublicFactCol("impressions", "Impressions", InBetweenEquality),
           PublicFactCol("clicks", "Clicks", In)
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack, revision = 2
       )
   }
 
-  def pubfact2(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfact2(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     getFactBuilder2
       .toPublicFact("publicFact2",
         Set(
@@ -195,12 +195,12 @@ class RequestModelTest extends FunSuite with Matchers {
           PublicFactCol("impressions", "Impressions", InBetweenEquality),
           PublicFactCol("clicks", "Clicks", In)
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
 
-  def pubfact3(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfact3(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     getFactBuilder2
       .toPublicFact("publicFact3",
         Set(
@@ -219,12 +219,12 @@ class RequestModelTest extends FunSuite with Matchers {
           PublicFactCol("impressions", "Impressions", InBetweenEquality),
           PublicFactCol("clicks", "Clicks", In)
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
 
-  def pubfact4(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfact4(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     getFactBuilder
       .toPublicFact("publicFact4",
         Set(
@@ -244,7 +244,7 @@ class RequestModelTest extends FunSuite with Matchers {
           PublicFactCol("impressions", "Impressions", InBetweenEquality),
           PublicFactCol("clicks", "Clicks", In)
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -402,13 +402,13 @@ class RequestModelTest extends FunSuite with Matchers {
     }
   }
 
-  def getDefaultRegistry(forcedFilters: Set[ForcedFilter] = Set.empty): Registry = {
+  def getDefaultRegistry(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): Registry = {
     val registryBuilder = new RegistryBuilder
-    registryBuilder.register(pubfact4(forcedFilters))
-    registryBuilder.register(pubfact3(forcedFilters))
-    registryBuilder.register(pubfact2(forcedFilters))
-    registryBuilder.register(pubfact(forcedFilters))
-    registryBuilder.register(pubfactRev2(forcedFilters))
+    registryBuilder.register(pubfact4(forcedFilters, forceFilters))
+    registryBuilder.register(pubfact3(forcedFilters, forceFilters))
+    registryBuilder.register(pubfact2(forcedFilters, forceFilters))
+    registryBuilder.register(pubfact(forcedFilters, forceFilters))
+    registryBuilder.register(pubfactRev2(forcedFilters, forceFilters))
     registryBuilder.register(site_dim)
     registryBuilder.register(ad_dim)
     registryBuilder.register(advertiser)
@@ -4002,7 +4002,7 @@ class RequestModelTest extends FunSuite with Matchers {
                           }"""
 
     val request: ReportingRequest = getReportingRequestSync(jsonString)
-    val registry = getDefaultRegistry(Set(EqualityFilter("Source", "2", isForceFilter = true)))
+    val registry = getDefaultRegistry(forceFilters = Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))))
     val res = RequestModel.from(request, registry)
     assert(res.isSuccess, res.errorMessage("request model should succeed"))
     val model = res.toOption.get
@@ -4268,7 +4268,7 @@ class RequestModelTest extends FunSuite with Matchers {
                           }"""
 
     val request: ReportingRequest = getReportingRequestSync(jsonString)
-    val registry = getDefaultRegistry(Set(EqualityFilter("Source", "2", isForceFilter = true)))
+    val registry = getDefaultRegistry(forceFilters = Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))))
     val res = RequestModel.from(request, registry)
     assert(res.isSuccess, res.errorMessage("request model should succeed"))
     val model = res.toOption.get

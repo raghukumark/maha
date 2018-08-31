@@ -25,12 +25,12 @@ trait BaseHiveQueryGeneratorTest
     HiveQueryGeneratorV1.register(queryGeneratorRegistry, DefaultPartitionColumnRenderer, TestUDFRegistrationFactory())
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
     registryBuilder.register(s_stats_fact(forcedFilters))
     registryBuilder.register(aga_stats_fact(forcedFilters))
     registryBuilder.register(ce_stats(forcedFilters))
     registryBuilder.register(bidReco())
-    registryBuilder.register(pubfact2(forcedFilters))
+    registryBuilder.register(pubfact2(forcedFilters, forceFilters))
   }
 
   protected[this] def s_stats_fact(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
@@ -257,7 +257,7 @@ trait BaseHiveQueryGeneratorTest
         , PublicFactCol("custom_rollup_spend", "Custom Rollup Spend", InBetweenEquality)
         , PublicFactCol("noop_rollup_spend", "Noop Rollup Spend", InBetweenEquality)
       ),
-      Set(EqualityFilter("Status","Valid", isForceFilter = true)),
+      Set(ForceFilter(EqualityFilter("Status","Valid", isForceFilter = true))),
       Map(
         (SyncRequest, DailyGrain) -> 400, (AsyncRequest, DailyGrain) -> 400
       ),
@@ -341,7 +341,7 @@ trait BaseHiveQueryGeneratorTest
       )
   }
 
-  def pubfact2(forcedFilters: Set[ForcedFilter] = Set.empty): PublicFact = {
+  def pubfact2(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): PublicFact = {
     import HiveExpression._
     import UDFHiveExpression._
     ColumnContext.withColumnContext { implicit dc: ColumnContext =>
@@ -358,6 +358,7 @@ trait BaseHiveQueryGeneratorTest
           , DimCol("start_time", IntType())
           , DimCol("stats_date", DateType("YYYY-MM-dd"))
           , DimCol("show_flag", IntType())
+          , HiveDerDimCol("Flag", IntType(), COALESCE("{show_flag}", "1"))
           , HiveDerDimCol("Month", DateType(), TEST_DATE_UDF("{stats_date}", "M"))
           , HiveDerDimCol("Week", DateType(), TEST_DATE_UDF("{stats_date}", "W"))
         ),
@@ -378,11 +379,13 @@ trait BaseHiveQueryGeneratorTest
           , HiveDerFactCol("N Clicks", DecType(), DECODE("{stats_source}", "1", "{clicks}", "0.0"))
           , HiveDerFactCol("N Average CPC", DecType(), "{N Spend}" /- "{N Clicks}")
           , FactCol("avg_pos", DecType(3, "0.0", "0.1", "500"), HiveCustomRollup(SUM("{avg_pos}" * "{impressions}") /- SUM("{impressions}")))
+          , FactCol("mta_count", IntType())
+          , HiveDerFactCol("Conversion Assists", IntType(), DECODE("{Flag}", "2", "{mta_count","0"))
           , HiveDerFactCol("impression_share", IntType(), DECODE(MAX("{show_flag}"), "1", ROUND(SUM("{impressions}") /- SUM("{s_impressions}"), 4), "NULL"), rollupExpression = NoopRollup)
           , HiveDerFactCol("impression_share_rounded", IntType(), ROUND("{impression_share}", 5), rollupExpression = NoopRollup)
         ),
-        annotations = Set(
-        )
+        annotations = Set(),
+        forceFilters = forceFilters
       )
     }
       .toPublicFact("performance_stats",
@@ -396,7 +399,8 @@ trait BaseHiveQueryGeneratorTest
           PubCol("stats_source", "Source", Equality),
           PubCol("price_type", "Pricing Type", In),
           PubCol("Month", "Month", Equality),
-          PubCol("Week", "Week", Equality)
+          PubCol("Week", "Week", Equality),
+          PubCol("Flag", "Flag", InEquality)
         ),
         Set(
           PublicFactCol("impressions", "Impressions", InBetweenEquality),
@@ -413,9 +417,10 @@ trait BaseHiveQueryGeneratorTest
           PublicFactCol("N Spend", "N Spend", InBetweenEquality),
           PublicFactCol("N Clicks", "N Clicks", InBetweenEquality),
           PublicFactCol("N Average CPC", "N Average CPC", InBetweenEquality),
-          PublicFactCol("impression_share_rounded", "Impression Share", InBetweenEquality)
+          PublicFactCol("impression_share_rounded", "Impression Share", InBetweenEquality),
+          PublicFactCol("Conversion Assists", "Conversion Assists", InBetweenEquality)
         ),
-        forcedFilters,
+        forceFilters,
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }

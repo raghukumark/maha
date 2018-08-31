@@ -8,6 +8,7 @@ import java.util.concurrent.Executors
 import com.yahoo.maha.core.CoreSchema._
 import com.yahoo.maha.core._
 import com.yahoo.maha.core.bucketing.{BucketSelector, BucketingConfig, DefaultBucketingConfig, QueryGenBucketingConfigBuilder}
+import com.yahoo.maha.core.fact.ForceFilter
 import com.yahoo.maha.core.registry.{Registry, RegistryBuilder}
 import com.yahoo.maha.core.request._
 import org.joda.time.{DateTime, DateTimeZone}
@@ -38,12 +39,12 @@ trait BaseQueryGeneratorTest {
   protected[this] implicit val executionContext: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
   protected[this] val queryPipelineFactory = new DefaultQueryPipelineFactory()
   
-  protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder : RegistryBuilder) : Unit
+  protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder : RegistryBuilder, forceFilter: Set[ForceFilter] = Set.empty) : Unit
   protected[this] def registerDims(registryBuilder : RegistryBuilder) : Unit
 
-  protected[this] def getDefaultRegistry(forcedFilters: Set[ForcedFilter] = Set.empty): Registry = {
+  protected[this] def getDefaultRegistry(forcedFilters: Set[ForcedFilter] = Set.empty, forceFilters: Set[ForceFilter] = Set.empty): Registry = {
     val registryBuilder = new RegistryBuilder
-    registerFacts(forcedFilters, registryBuilder)
+    registerFacts(forcedFilters, registryBuilder, forceFilters)
     registerDims(registryBuilder)
     registryBuilder.build()
   }

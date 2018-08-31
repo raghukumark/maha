@@ -8,6 +8,7 @@ import com.yahoo.maha.core._
 import com.yahoo.maha.core.CoreSchema._
 import com.yahoo.maha.core.DruidPostResultFunction.START_OF_THE_WEEK
 import com.yahoo.maha.core.ddl.{HiveDDLAnnotation, OracleDDLAnnotation}
+import com.yahoo.maha.core.fact.ForceFilter
 import com.yahoo.maha.core.request.{AsyncRequest, SyncRequest}
 import org.scalatest.{FunSuite, Matchers}
 
@@ -610,10 +611,10 @@ class DimensionTest extends FunSuite with Matchers {
           , PubCol("start_time", "Start Time", Equality)
           , PubCol("end_time", "End Time", Equality)
         ),
-        forcedFilters = Set(EqualityFilter("blah", "blah", isForceFilter = true)), highCardinalityFilters = Set.empty
+        forceFilters = Set(ForceFilter(EqualityFilter("blah", "blah", isForceFilter = true))), highCardinalityFilters = Set.empty
       )
     }
-    thrown.getMessage should startWith("requirement failed: Forced filter on non-existing column : EqualityFilter(blah,blah,true,false)")
+    thrown.getMessage should startWith("requirement failed: Forced filter on non-existing column : ForceFilter(EqualityFilter(blah,blah,true,false),None,false)")
   }
 
   test("toPublicDimension should fail if forced filter columns ARE in the base dim, but resolve to the same base column (duplicate where clause)") {
@@ -639,7 +640,7 @@ class DimensionTest extends FunSuite with Matchers {
             , PubCol("another", "Another Source", Equality)
             , PubCol("end_time", "End Time", Equality)
           ),
-          forcedFilters = Set(EqualityFilter("Another Source", "10", isForceFilter = true), EqualityFilter("Source", "10", isForceFilter = true)), highCardinalityFilters = Set.empty
+          forceFilters = Set(ForceFilter(EqualityFilter("Another Source", "10", isForceFilter = true)), ForceFilter(EqualityFilter("Source", "10", isForceFilter = true))), highCardinalityFilters = Set.empty
         )
   }
   thrown.getMessage should startWith("requirement failed: Forced Filters public fact and map of forced base cols differ in size")
@@ -670,10 +671,10 @@ class DimensionTest extends FunSuite with Matchers {
         Set(
           PubCol("id", "PD ID", Equality)
         ),
-        forcedFilters = Set(EqualityFilter("PD ID", "1"))
+        forceFilters = Set(ForceFilter(EqualityFilter("PD ID", "1")))
       )
     }
-    thrown.getMessage should startWith("requirement failed: Forced Filter boolean false, expected true")
+    thrown.getMessage should startWith("requirement failed: Filter must be declared with isForceFilter = true")
   }
 
   test("newDimension should fail if derived expression is not defined for derived columns") {

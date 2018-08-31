@@ -399,7 +399,7 @@ class JsonRowListTest extends FunSuite with BaseQueryGeneratorTest with SharedDi
     assert(thrown.getMessage === "/blah (Permission denied)")
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
     registryBuilder.register(pubfact(forcedFilters))
   }
 
@@ -467,7 +467,7 @@ class JsonRowListTest extends FunSuite with BaseQueryGeneratorTest with SharedDi
           PublicFactCol("Average CPC", "Average CPC", InBetweenEquality),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }

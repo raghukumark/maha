@@ -334,7 +334,17 @@ object CostMultiplier {
   )
 }
 
-case class ForceFilter(filter: ForcedFilter) {
+sealed trait FilterCondition {
+  def apply(requestModel: RequestModel) : Boolean
+}
+
+case class OnSelect(fields: Set[String]) extends FilterCondition {
+  override def apply(requestModel: RequestModel): Boolean = {
+    requestModel.requestColsSet.intersect(fields).size > 0
+  }
+}
+
+case class ForceFilter(filter: ForcedFilter, filterCondition: Option[FilterCondition] = None, isForceFilterOverridable: Boolean = false) {
   require(filter.isForceFilter, "Filter must be declared with isForceFilter = true")
   def isOverridable: Boolean = filter.isOverridable
 }
@@ -692,21 +702,21 @@ case class FactTable private[fact](name: String
           }}}
       factAliasMap.toMap
     }
-    val forcedFiltersByBasenameMap: Map[String, Filter] = publicFact.forcedFilters.map{
+    val forcedFiltersByBasenameMap: Map[String, Filter] = publicFact.forceFilters.map{
       val backwardColByAlias: Map[String, String] =
         publicFact.dimCols.map(col => col.alias -> col.name).toMap ++
           publicFact.factCols.map(col => col.alias -> col.name).toMap
       forceFilter =>
-        val wrappedField = forceFilter.field
+        val wrappedField = forceFilter.filter.field
         if(backwardColByAlias.contains(wrappedField) && baseNameAliasMap.contains(backwardColByAlias(wrappedField))){
-          baseNameAliasMap(backwardColByAlias(wrappedField)) -> forceFilter
+          baseNameAliasMap(backwardColByAlias(wrappedField)) -> forceFilter.filter
         }
         else{
-          throw new IllegalStateException(s"requirement failed: ${forceFilter.field} doesn't have a known alias")
+          throw new IllegalStateException(s"requirement failed: ${forceFilter.filter.field} doesn't have a known alias")
         }
     }.toMap
 
-    require(forcedFiltersByBasenameMap.size == publicFact.forcedFilters.size, "Forced Filters public fact and map of forced base cols differ in size")
+    require(forcedFiltersByBasenameMap.size == publicFact.forceFilters.size, "Forced Filters public fact and map of forced base cols differ in size")
 
   }
   
@@ -1454,7 +1464,7 @@ case class FactBuilder private[fact](private val baseFact: Fact, private var tab
   def toPublicFact(name: String
                    , dimCols: Set[PublicDimColumn]
                    , factCols: Set[PublicFactColumn]
-                   , forcedFilters: Set[ForcedFilter]
+                   , forceFilters: Set[ForceFilter]
                    , maxDaysWindow: Map[(RequestType, Grain), Int]
                    , maxDaysLookBack: Map[(RequestType, Grain), Int]
                    , enableUTCTimeConversion: Boolean = true
@@ -1467,7 +1477,7 @@ case class FactBuilder private[fact](private val baseFact: Fact, private var tab
       , dimCols
       , factCols
       , tableMap
-      , forcedFilters
+      , forceFilters
       , maxDaysWindow
       , maxDaysLookBack
       , dimCardinalityLookup
@@ -1606,7 +1616,7 @@ case class PublicFactTable private[fact](name: String
                                          , dimCols: Set[PublicDimColumn]
                                          , factCols: Set[PublicFactColumn]
                                          , facts: Map[String, Fact]
-                                         , forcedFilters: Set[ForcedFilter]
+                                         , forceFilters: Set[ForceFilter]
                                          , maxDaysWindow: Map[(RequestType, Grain), Int]
                                          , maxDaysLookBack: Map[(RequestType, Grain), Int]
                                          , dimCardinalityLookup: Option[LongRangeLookup[Map[RequestType, Map[Engine, Int]]]]
@@ -1620,7 +1630,7 @@ case class PublicFactTable private[fact](name: String
   //generate column list by alias
   val columnsByAlias: Set[String] = dimCols.map(col => col.alias) ++ factCols.map(col => col.alias)
   val allColumnsByAlias: Set[String] = columnsByAlias
-  val forcedFiltersByAliasMap: Map[String, ForcedFilter] = forcedFilters.map(f => f.field -> f).toMap
+  val forcedFiltersByAliasMap: Map[String, ForcedFilter] = forceFilters.map(f => f.filter.field -> f.filter).toMap
 
   val foreignKeyAliases: Set[String] = dimCols.filter(col => facts
     .values

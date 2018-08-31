@@ -54,7 +54,7 @@ class OracleQueryExecutorTest extends FunSuite with Matchers with BeforeAndAfter
     oracleQueryExecutor.foreach(queryExecutorContext.remove(_))
   }
 
-  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder): Unit = {
+  override protected[this] def registerFacts(forcedFilters: Set[ForcedFilter], registryBuilder: RegistryBuilder, forceFilters: Set[ForceFilter] = Set.empty): Unit = {
     registryBuilder.register(pubfact(forcedFilters))
     registryBuilder.register(pubfactInvalid(forcedFilters))
     registryBuilder.register(druidpubfact(forcedFilters))
@@ -263,7 +263,7 @@ class OracleQueryExecutorTest extends FunSuite with Matchers with BeforeAndAfter
           PublicFactCol("CTR Percentage", "CTR Percentage", Set.empty),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }
@@ -317,7 +317,7 @@ class OracleQueryExecutorTest extends FunSuite with Matchers with BeforeAndAfter
           PublicFactCol("CTR Percentage", "CTR Percentage", Set.empty),
           PublicFactCol("CTR", "CTR", InBetweenEquality)
         ),
-        Set(EqualityFilter("Source", "2", isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("Source", "2", isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
   }

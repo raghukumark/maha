@@ -85,6 +85,7 @@ object BaseEquality {
 sealed trait ForcedFilter extends Filter {
   def isForceFilter: Boolean = false
   def isOverridable: Boolean = false
+  def isForceFilterOverridable: Boolean = false
 }
 
 case class PushDownFilter(f: Filter) extends Filter {

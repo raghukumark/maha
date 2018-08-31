@@ -241,7 +241,7 @@ class PublicFactTest extends FunSuite with Matchers {
         Set(
           PublicFactCol("clicks", "Clicks", In)
         ),
-        Set(EqualityFilter("field", "value", isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("field", "value", isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
     }
@@ -380,7 +380,7 @@ class PublicFactTest extends FunSuite with Matchers {
         Set(
           PublicFactCol("clicks", "Clicks", In)
         ),
-        Set(EqualityFilter("Pricing Type", "1", isForceFilter = true), InFilter("Sale", List("1", "2"), isForceFilter = true)),
+        Set(ForceFilter(EqualityFilter("Pricing Type", "1", isForceFilter = true)), ForceFilter(InFilter("Sale", List("1", "2"), isForceFilter = true))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
     }
@@ -396,11 +396,11 @@ class PublicFactTest extends FunSuite with Matchers {
         ),
         Set(
         ),
-        Set(EqualityFilter("Pricing Type", "1")),
+        Set(ForceFilter(EqualityFilter("Pricing Type", "1"))),
         getMaxDaysWindow, getMaxDaysLookBack
       )
     }
-    thrown.getMessage should startWith("requirement failed: Forced Filter boolean false, expected true")
+    thrown.getMessage should startWith("requirement failed: Filter must be declared with isForceFilter = true")
   }
 
   test("toPublicFact should succeed with forced filter at public fact level which is overridden at fact level") {
@@ -416,7 +416,7 @@ class PublicFactTest extends FunSuite with Matchers {
       Set(
         PublicFactCol("clicks", "Clicks", In)
       ),
-      Set(InFilter("Pricing Type", List("2"), isForceFilter = true)),
+      Set(ForceFilter(InFilter("Pricing Type", List("2"), isForceFilter = true))),
       getMaxDaysWindow, getMaxDaysLookBack
     )
 

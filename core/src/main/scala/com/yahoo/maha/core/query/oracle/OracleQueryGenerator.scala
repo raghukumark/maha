@@ -1027,7 +1027,7 @@ b. Dim Driven
       val fact = queryContext.factBestCandidate.fact
       val publicFact = queryContext.factBestCandidate.publicFact
       val filters = queryContext.factBestCandidate.filters
-      val allFilters = publicFact.forcedFilters //++ filters  need to append regular filters or pass in
+      val allFilters = publicFact.forceFilters //++ filters  need to append regular filters or pass in
       val whereFilters = new mutable.LinkedHashSet[String]
       val havingFilters = new mutable.LinkedHashSet[String]
       var escaped = false
